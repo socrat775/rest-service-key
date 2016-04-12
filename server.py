@@ -5,15 +5,13 @@ from tornado.iostream import StreamClosedError
 from tornado.tcpserver import TCPServer as AsyncTCPServer
 from motor import MotorClient
 from random import choice
-from string import ascii_letters
 
 
 class HandlerClient(object):
-    def __init__(self, stream, address, db, all_symbol):
+    def __init__(self, stream, address, db):
         self.stream = stream
         self.address = address
         self.collection = db.test.all_keys
-        self.all_symbol = all_symbol
         self.all_state = {0: b"not issued", 1: b"issued", 2: b"repaid"}
         self.stream.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.stream.set_close_callback(self.close_connect)
@@ -26,14 +24,10 @@ class HandlerClient(object):
     @coroutine
     def get_key(self):
         logging.debug("get key")
-        key = ''.join(choice(self.all_symbol) for i in range(4))
-        while True:
-           random_key = yield self.collection.find_one({"key":key})
-           if random_key['status'] == 0:
-              update_key = yield self.collection.update({"key": random_key['key']}, {"$set": {"status": 1}})
-              logging.debug("Update key %s: %s", random_key, update_key)
-              break
-        raise Return(random_key)
+        random_key = yield self.collection.find_one({"status": 0})
+        update_key = yield self.collection.update({"key": random_key['key']}, {"$set": {"status": 1}})
+        logging.debug("Update key %s: %s", random_key, update_key)
+        raise Return(random_key)      
 
     @coroutine
     def repay_key(self, key):
@@ -88,11 +82,10 @@ class HandlerClient(object):
 
 class RESTserver(AsyncTCPServer):
     db = MotorClient('localhost', 27017)
-    all_symbol = ascii_letters + ''.join(str(i) for i in xrange(0, 10))
 
     @coroutine
     def handle_stream(self, stream, address):
-        connection = HandlerClient(stream, address, RESTserver.db, RESTserver.all_symbol)
+        connection = HandlerClient(stream, address, RESTserver.db)
         yield connection.on_connect()
 
 if __name__ == "__main__":
