@@ -27,11 +27,7 @@ class HandlerClient(object):
         random_key = yield self.collection.find_one({"status": 0})
         update_key = yield self.collection.update({"key": random_key['key']}, {"$set": {"status": 1}})
         logging.debug("Update key %s: %s", random_key, update_key)
-<<<<<<< HEAD
-        raise Return(random_key)      
-=======
         raise Return(random_key)
->>>>>>> 0ff4ac5d3494dfb65d1c0ca7288d4f1d7559b511
 
     @coroutine
     def repay_key(self, key):
