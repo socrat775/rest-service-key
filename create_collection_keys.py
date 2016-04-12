@@ -12,8 +12,14 @@ for _1 in all_symbol:
       for _3 in all_symbol:
          for _4 in all_symbol:
             keys.append(''.join((_1, _2, _3, _4)))
+<<<<<<< HEAD
 
 shuffle(keys)
 for key in keys:
     db.all_keys.save({'key': key, 'status': 0})
+=======
+>>>>>>> 0ff4ac5d3494dfb65d1c0ca7288d4f1d7559b511
 
+shuffle(keys)
+for key in keys:
+    db.all_keys.save({'key': key, 'status': 0})
